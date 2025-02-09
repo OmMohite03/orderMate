@@ -3,8 +3,23 @@ from django.db.models import Count
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Order, Dispatch, Received
-from django.shortcuts import get_object_or_404, redirect, render
 import requests
+from rest_framework import viewsets
+from .models import Order
+from .serializers import OrderSerializer, ReceivedSerializer, DispatchSerializer
+from django.shortcuts import get_object_or_404, redirect, render
+
+class OrderViewSet(viewsets.ModelViewSet):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+class DispatchViewSet(viewsets.ModelViewSet):
+    queryset = Dispatch.objects.all()
+    serializer_class = DispatchSerializer
+
+class ReceivedViewSet(viewsets.ModelViewSet):
+    queryset = Received.objects.all()
+    serializer_class = ReceivedSerializer
 
 @api_view(['GET'])
 def monthly_summary(request):
