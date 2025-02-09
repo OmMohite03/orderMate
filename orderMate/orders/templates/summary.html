@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Summary</title>
+</head>
+<body>
+    <h2>Monthly Order Summary</h2>
+    <table border="1">
+        <tr>
+            <th>Month</th>
+            <th>Orders</th>
+            <th>Dispatches</th>
+            <th>Received</th>
+        </tr>
+        {% for month, counts in data.items %}
+        <tr>
+            <td>{{ month }}</td>
+            <td>{{ counts.orders }}</td>
+            <td>{{ counts.dispatches }}</td>
+            <td>{{ counts.received }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
