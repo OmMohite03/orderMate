@@ -1,14 +1,12 @@
-from django.db.models.functions import TruncMonth
-from django.db.models import Count
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import Order, Dispatch, Received
-import requests
+import json
 from rest_framework import viewsets
-from .models import Order
-from .serializers import OrderSerializer, ReceivedSerializer, DispatchSerializer
-from django.shortcuts import get_object_or_404, redirect, render
+from orders.models import Order, Dispatch, Received
+from orders.serializers import OrderSerializer, DispatchSerializer, ReceivedSerializer
+from django.shortcuts import render
+from django.http import JsonResponse
+from collections import defaultdict
 
+# API ViewSets
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -21,54 +19,31 @@ class ReceivedViewSet(viewsets.ModelViewSet):
     queryset = Received.objects.all()
     serializer_class = ReceivedSerializer
 
-@api_view(['GET'])
+# Monthly summary JSON API
 def monthly_summary(request):
-    orders_by_month = (
-        Order.objects.annotate(month=TruncMonth('order_date_time'))
-        .values('month')
-        .annotate(order_count=Count('order_id'))
-        .order_by('month')
-    )
+    data = defaultdict(lambda: {"orders": 0, "dispatches": 0, "received": 0})
 
-    dispatches_by_month = (
-        Dispatch.objects.annotate(month=TruncMonth('dispatch_date_time'))
-        .values('month')
-        .annotate(dispatch_count=Count('dispatch_id'))
-        .order_by('month')
-    )
+    for order in Order.objects.all():
+        month = order.order_date_time.strftime("%Y-%m")
+        data[month]["orders"] += 1
 
-    received_by_month = (
-        Received.objects.annotate(month=TruncMonth('received_date_time'))
-        .values('month')
-        .annotate(received_count=Count('received_id'))
-        .order_by('month')
-    )
+    for dispatch in Dispatch.objects.all():
+        month = dispatch.dispatch_date_time.strftime("%Y-%m")
+        data[month]["dispatches"] += 1
 
-    # Merging the results
-    summary = {}
-    for entry in orders_by_month:
-        month = entry["month"].strftime('%Y-%m')
-        summary.setdefault(month, {'orders': 0, 'dispatches': 0, 'received': 0})
-        summary[month]['orders'] = entry['order_count']
+    for received in Received.objects.all():
+        month = received.received_date_time.strftime("%Y-%m")
+        data[month]["received"] += 1
 
-    for entry in dispatches_by_month:
-        month = entry["month"].strftime('%Y-%m')
-        summary.setdefault(month, {'orders': 0, 'dispatches': 0, 'received': 0})
-        summary[month]['dispatches'] = entry['dispatch_count']
+    return JsonResponse(data)
 
-    for entry in received_by_month:
-        month = entry["month"].strftime('%Y-%m')
-        summary.setdefault(month, {'orders': 0, 'dispatches': 0, 'received': 0})
-        summary[month]['received'] = entry['received_count']
-
-    from django.shortcuts import render
-
-
-    return Response(summary)
-
+# HTML Page for Monthly Summary
 def monthly_summary_page(request):
-    api_url = "http://127.0.0.1:8000/api/summary/"
-    response = requests.get(api_url)
-    data = response.json() if response.status_code == 200 else {}
+    # Fetch JSON response from the summary API
+    from django.http import JsonResponse
+    from .views import monthly_summary
+    
+    response = monthly_summary(request)
+    data = json.loads(response.content.decode('utf-8'))
 
-    return render(request, "summary.html", {"data": data})
+    return render(request, "orders/summary.html", {"data": data})

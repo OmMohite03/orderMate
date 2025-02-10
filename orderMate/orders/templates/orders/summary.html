@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Summary</title>
+    <style>
+        table { width: 50%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid black; padding: 10px; text-align: center; }
+        th { background-color: lightgray; }
+    </style>
+</head>
+<>
+    <h2>Monthly Order Summary</h2>
+    <button onclick="sortTable()">Sort by Month ▲▼</button>
+    <table id="summaryTable" border="1" data-sorted="asc">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Orders</th>
+                <th>Dispatches</th>
+                <th>Received</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for month, stats in data.items %}
+            <tr>
+                <td>{{ month }}</td>
+                <td>{{ stats.orders }}</td>
+                <td>{{ stats.dispatches }}</td>
+                <td>{{ stats.received }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        function sortTable() {
+            let table = document.getElementById("summaryTable");
+            let rows = Array.from(table.rows).slice(1); // Exclude headers
+            let sortedAsc = table.getAttribute("data-sorted") === "asc";
+            
+            rows.sort((rowA, rowB) => {
+                let monthA = rowA.cells[0].innerText;
+                let monthB = rowB.cells[0].innerText;
+                return sortedAsc ? monthB.localeCompare(monthA) : monthA.localeCompare(monthB);
+            });
+
+            table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
+            rows.forEach(row => table.appendChild(row));
+        }
+    </script>
+</body>
+</html>
