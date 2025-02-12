@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monthly Summary</title>
     <script>
+        /**
+         * Fetches monthly summary data from the API and updates the table.
+         */
         function fetchSummary() {
             let selectedMonth = document.getElementById("monthSelect").value;
-            let url = "/api/summary/";  // Update this if needed
+            let url = "/api/summary/";
 
             if (selectedMonth) {
                 url += `?month=${selectedMonth}`;
@@ -17,8 +20,7 @@
                 .then(response => response.json())
                 .then(data => {
                     let tableBody = document.getElementById("summaryTableBody");
-                    tableBody.innerHTML = ""; // Clear existing data
-
+                    tableBody.innerHTML = "";
                     for (let month in data) {
                         let row = `<tr>
                             <td>${month}</td>
@@ -32,9 +34,12 @@
                 .catch(error => console.error("Error fetching data:", error));
         }
 
+        /**
+         * Sorts the table rows by month in ascending/descending order.
+         */
         function sortTable() {
             let table = document.getElementById("summaryTable");
-            let rows = Array.from(document.querySelectorAll("#summaryTableBody tr")); // Get table rows
+            let rows = Array.from(document.querySelectorAll("#summaryTableBody tr")); 
             let sortedAsc = table.getAttribute("data-sorted") === "asc";
             
             rows.sort((rowA, rowB) => {
@@ -46,7 +51,7 @@
             table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
 
             let tableBody = document.getElementById("summaryTableBody");
-            tableBody.innerHTML = ""; // Clear table before appending sorted rows
+            tableBody.innerHTML = ""; 
             rows.forEach(row => tableBody.appendChild(row));
         }
     </script>

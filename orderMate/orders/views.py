@@ -21,14 +21,14 @@ class ReceivedViewSet(viewsets.ModelViewSet):
 
 def monthly_summary(request):
     """
-    Fetches summary of orders, dispatches, and received records month-wise.
-    If a specific month (YYYY-MM) is provided as a query parameter, fetch only that month.
+    Returns a JSON summary of orders, dispatches, and received records per month.
+    If a specific month (YYYY-MM) is provided as a query parameter, filters results accordingly.
     """
-    selected_month = request.GET.get("month")  # Get month filter from request
+    selected_month = request.GET.get("month") 
 
     data = defaultdict(lambda: {"orders": 0, "dispatches": 0, "received": 0})
 
-    # Filter records by selected month (if provided) or fetch all
+    
     orders = Order.objects.all()
     dispatches = Dispatch.objects.all()
     receiveds = Received.objects.all()
@@ -54,7 +54,9 @@ def monthly_summary(request):
 
 # HTML Page for Monthly Summary
 def monthly_summary_page(request):
-    # Fetch JSON response from the summary API
+    """
+    Renders the monthly summary page by fetching data from the summary API.
+    """
     from django.http import JsonResponse
     from .views import monthly_summary
     
