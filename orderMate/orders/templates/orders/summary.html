@@ -4,15 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monthly Summary</title>
-    <style>
-        table { width: 50%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid black; padding: 10px; text-align: center; }
-        th { background-color: lightgray; }
-    </style>
+    <script>
+        function fetchSummary() {
+            let selectedMonth = document.getElementById("monthSelect").value;
+            let url = "/api/summary/";  // Update this if needed
+
+            if (selectedMonth) {
+                url += `?month=${selectedMonth}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let tableBody = document.getElementById("summaryTableBody");
+                    tableBody.innerHTML = ""; // Clear existing data
+
+                    for (let month in data) {
+                        let row = `<tr>
+                            <td>${month}</td>
+                            <td>${data[month].orders}</td>
+                            <td>${data[month].dispatches}</td>
+                            <td>${data[month].received}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    }
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+
+        function sortTable() {
+            let table = document.getElementById("summaryTable");
+            let rows = Array.from(document.querySelectorAll("#summaryTableBody tr")); // Get table rows
+            let sortedAsc = table.getAttribute("data-sorted") === "asc";
+            
+            rows.sort((rowA, rowB) => {
+                let monthA = rowA.cells[0].innerText;
+                let monthB = rowB.cells[0].innerText;
+                return sortedAsc ? monthB.localeCompare(monthA) : monthA.localeCompare(monthB);
+            });
+
+            table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
+
+            let tableBody = document.getElementById("summaryTableBody");
+            tableBody.innerHTML = ""; // Clear table before appending sorted rows
+            rows.forEach(row => tableBody.appendChild(row));
+        }
+    </script>
 </head>
-<>
-    <h2>Monthly Order Summary</h2>
-    <button onclick="sortTable()">Sort by Month ▲▼</button>
+<body>
+    <h2>Monthly Summary</h2>
+    
+    <label for="monthSelect">Select Month:</label>
+    <input type="month" id="monthSelect">
+    <button onclick="fetchSummary()">Filter</button>
+    <button onclick="sortTable()">Sort Asc/Desc</button>
+
     <table id="summaryTable" border="1" data-sorted="asc">
         <thead>
             <tr>
@@ -22,7 +68,7 @@
                 <th>Received</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="summaryTableBody">
             {% for month, stats in data.items %}
             <tr>
                 <td>{{ month }}</td>
@@ -33,21 +79,5 @@
             {% endfor %}
         </tbody>
     </table>
-    <script>
-        function sortTable() {
-            let table = document.getElementById("summaryTable");
-            let rows = Array.from(table.rows).slice(1); // Exclude headers
-            let sortedAsc = table.getAttribute("data-sorted") === "asc";
-            
-            rows.sort((rowA, rowB) => {
-                let monthA = rowA.cells[0].innerText;
-                let monthB = rowB.cells[0].innerText;
-                return sortedAsc ? monthB.localeCompare(monthA) : monthA.localeCompare(monthB);
-            });
-
-            table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
-            rows.forEach(row => table.appendChild(row));
-        }
-    </script>
 </body>
 </html>

@@ -19,19 +19,34 @@ class ReceivedViewSet(viewsets.ModelViewSet):
     queryset = Received.objects.all()
     serializer_class = ReceivedSerializer
 
-# Monthly summary JSON API
 def monthly_summary(request):
+    """
+    Fetches summary of orders, dispatches, and received records month-wise.
+    If a specific month (YYYY-MM) is provided as a query parameter, fetch only that month.
+    """
+    selected_month = request.GET.get("month")  # Get month filter from request
+
     data = defaultdict(lambda: {"orders": 0, "dispatches": 0, "received": 0})
 
-    for order in Order.objects.all():
+    # Filter records by selected month (if provided) or fetch all
+    orders = Order.objects.all()
+    dispatches = Dispatch.objects.all()
+    receiveds = Received.objects.all()
+
+    if selected_month:
+        orders = orders.filter(order_date_time__startswith=selected_month)
+        dispatches = dispatches.filter(dispatch_date_time__startswith=selected_month)
+        receiveds = receiveds.filter(received_date_time__startswith=selected_month)
+
+    for order in orders:
         month = order.order_date_time.strftime("%Y-%m")
         data[month]["orders"] += 1
 
-    for dispatch in Dispatch.objects.all():
+    for dispatch in dispatches:
         month = dispatch.dispatch_date_time.strftime("%Y-%m")
         data[month]["dispatches"] += 1
 
-    for received in Received.objects.all():
+    for received in receiveds:
         month = received.received_date_time.strftime("%Y-%m")
         data[month]["received"] += 1
 
