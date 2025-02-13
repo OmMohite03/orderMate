@@ -31,7 +31,7 @@ orderMate/
 ### Steps to Run Locally
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/orderMate.git
+   git clone https://github.com/OmMohite03/orderMate.git
    cd orderMate
    ```
 
