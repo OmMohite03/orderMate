@@ -7,17 +7,27 @@ OrderMate is a Django REST Framework (DRF) application that tracks orders, dispa
 - **REST API** built using Django REST Framework (DRF)
 - **Monthly Summary API** to fetch order, dispatch, and received counts
 - **Interactive Frontend** with filtering and sorting
-- **PostgreSQL Database** for data persistence
+- **PostgreSQL Database** Data seeding script to populate the database with random test data
+
+## Tech Stack
+- **Backend**:  Django, Django REST Framework (DRF)
+- **Database** PostgreSQL
+- **Monthly Summary API** to fetch order, dispatch, and received counts
+- **Frontend**  HTML, JavaScript, Bootstrap
+- **PostgreSQL Database** Data seeding script to populate the database with random test data
+
 
 ## Project Structure
 ```
 orderMate/
-│── manage.py
-│── orderMate/           # Main Django project settings
-│── users/               # Users app (handles user management)
-│── orders/              # Orders app (handles orders, dispatches, and received)
-│── templates/           # Contains summary.html for UI
-│── db.sqlite3           # (If using SQLite) or PostgreSQL database
+│── users/                 # Manages user data
+│── orders/                # Handles orders, dispatches, and received orders
+│── templates/             # Contains HTML files (summary.html)
+│── static/                # Static assets (CSS, JS, images)
+│── populatedb.py          # Script to populate database with random data
+│── requirements.txt       # Project dependencies
+│── manage.py              # Django management script
+└── README.md              # Project documentation
 ```
 
 ## Installation & Setup
@@ -27,6 +37,15 @@ orderMate/
 - PostgreSQL (or SQLite for development)
 - Django 4+
 - Django REST Framework
+- pip (Python package manager)
+- virtualenv (optional but recommended)
+
+## requirements.txt
+ ```bash
+   Django>=4.0,<5.0
+   djangorestframework>=3.12,<4.0
+   psycopg2>=2.9,<3.0
+ ```
 
 ### Steps to Run Locally
 1. **Clone the Repository**
@@ -41,8 +60,12 @@ orderMate/
    source env/bin/activate  # On Windows: env\Scripts\activate
    pip install -r requirements.txt
    ```
+3. ** Install Dependencies **
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. **Configure Database (PostgreSQL)**
+4. **Configure Database (PostgreSQL)**
    Update `settings.py`:
    ```python
    DATABASES = {
@@ -57,22 +80,22 @@ orderMate/
    }
    ```
 
-4. **Run Migrations**
+5. **Run Migrations**
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
-
-5. **Create a Superuser**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
 6. **Run the Development Server**
    ```bash
    python manage.py runserver
    ```
    Access the app at `http://127.0.0.1:8000`
+
+6. **Populating Database with Test Data**
+   ```bash
+   python manage.py populatedb
+   ```
+
 
 ## API Endpoints
 | Method | Endpoint             | Description                   |
@@ -97,7 +120,4 @@ Pull requests are welcome! Please follow these steps:
 3. Commit your changes (`git commit -m 'Add new feature'`)
 4. Push to the branch (`git push origin feature-name`)
 5. Open a pull request
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
