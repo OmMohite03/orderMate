@@ -14,7 +14,7 @@
         function populateYearDropdown() {
             let yearSelect = document.getElementById("yearSelect");
             let currentYear = new Date().getFullYear();
-            let earliestYear = 2020; // Adjust based on your database records
+            let earliestYear = 2020;
 
             yearSelect.innerHTML = "";
             for (let year = earliestYear; year <= currentYear + 5; year++) {
@@ -23,7 +23,7 @@
                 option.textContent = year;
                 yearSelect.appendChild(option);
             }
-            yearSelect.value = currentYear; // Default to the current year
+            yearSelect.value = currentYear;
         }
 
         function populateMonthDropdown() {
@@ -43,7 +43,7 @@
             });
 
             let currentMonth = new Date().getMonth() + 1;
-            monthSelect.value = currentMonth.toString().padStart(2, '0'); // Default to current month
+            monthSelect.value = currentMonth.toString().padStart(2, '0');
         }
 
         function fetchSummary() {
@@ -56,28 +56,24 @@
                 .then(data => {
                     let tableBody = document.getElementById("summaryTableBody");
                     tableBody.innerHTML = "";
-                    for (let month in data) {
-                        let row = `<tr>
-                            <td>${month}</td>
-                            <td>${data[month].orders}</td>
-                            <td>${data[month].dispatches}</td>
-                            <td>${data[month].received}</td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
+                    
+                    if (data.error) {
+                        tableBody.innerHTML = `<tr><td colspan="4">${data.error}</td></tr>`;
+                        return;
                     }
+
+                    Object.keys(data).forEach(month => {
+                        let row = data[month];
+                        let tableRow = `<tr>
+                            <td>${month}</td>
+                            <td>${row.orders || 0}</td>
+                            <td>${row.dispatches || 0}</td>
+                            <td>${row.received || 0}</td>
+                        </tr>`;
+                        tableBody.innerHTML += tableRow;
+                    });
                 })
                 .catch(error => console.error("Error fetching data:", error));
-        }
-
-        function sortTable() {
-            let table = document.getElementById("summaryTable");
-            let rows = Array.from(document.querySelectorAll("#summaryTableBody tr"));
-            let sortedAsc = table.getAttribute("data-sorted") === "asc";
-            rows.sort((rowA, rowB) => rowA.cells[0].innerText.localeCompare(rowB.cells[0].innerText) * (sortedAsc ? -1 : 1));
-            table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
-            let tableBody = document.getElementById("summaryTableBody");
-            tableBody.innerHTML = "";
-            rows.forEach(row => tableBody.appendChild(row));
         }
     </script>
 </head>
@@ -89,33 +85,21 @@
             <select id="monthSelect" class="form-select w-auto me-2"></select>
             <select id="yearSelect" class="form-select w-auto me-2"></select>
             <button class="btn btn-primary me-2" onclick="fetchSummary()">Filter</button>
-            <button class="btn btn-secondary" onclick="sortTable()">Sort Asc/Desc</button>
         </div>
         
         <div class="table-responsive">
-            <table id="summaryTable" class="table table-bordered table-striped table-hover text-center" data-sorted="asc">
+            <table id="summaryTable" class="table table-bordered table-striped table-hover text-center">
                 <thead class="table-dark">
                     <tr>
-                        <th>Month</th>
+                        <th>Date</th>
                         <th>Orders</th>
                         <th>Dispatches</th>
                         <th>Received</th>
                     </tr>
                 </thead>
-                <tbody id="summaryTableBody">
-                    {% for month, stats in data.items %}
-                    <tr>
-                        <td>{{ month }}</td>
-                        <td>{{ stats.orders }}</td>
-                        <td>{{ stats.dispatches }}</td>
-                        <td>{{ stats.received }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                <tbody id="summaryTableBody"></tbody>
             </table>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
