@@ -5,6 +5,7 @@ from orders.serializers import OrderSerializer, DispatchSerializer, ReceivedSeri
 from django.shortcuts import render
 from django.http import JsonResponse
 from collections import defaultdict
+from django.http import JsonResponse
 
 # API ViewSets
 class OrderViewSet(viewsets.ModelViewSet):
@@ -57,9 +58,6 @@ def monthly_summary_page(request):
     """
     Renders the monthly summary page by fetching data from the summary API.
     """
-    from django.http import JsonResponse
-    from .views import monthly_summary
-    
     response = monthly_summary(request)
     data = json.loads(response.content.decode('utf-8'))
 
