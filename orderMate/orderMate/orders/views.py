@@ -46,6 +46,12 @@ def monthly_summary(request):
         dispatches = dispatches.filter(dispatch_date_time__year=selected_year)
         receiveds = receiveds.filter(received_date_time__year=selected_year)
 
+    elif selected_month:
+        # Filter by month across all years
+        orders = orders.filter(order_date_time__month=selected_month)
+        dispatches = dispatches.filter(dispatch_date_time__month=selected_month)
+        receiveds = receiveds.filter(received_date_time__month=selected_month)
+
     for order in orders:
         month = order.order_date_time.strftime("%Y-%m")
         data[month]["orders"] += 1

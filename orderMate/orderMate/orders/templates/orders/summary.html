@@ -49,6 +49,9 @@
             } else if (selectedYear) {
                 // If only year is selected, get full year's data
                 url += `?year=${selectedYear}`;
+            } else if (selectedMonth) {
+                // If only month is selected, get that month across all years
+                url += `?month=${selectedMonth}`;
             }
     
             fetch(url)
@@ -69,7 +72,6 @@
                 })
                 .catch(error => console.error("Error fetching data:", error));
         }
-    
         
     
         function sortTable() {
