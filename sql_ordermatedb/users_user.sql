@@ -1,0 +1,64 @@
+-- -- users_user:
+
+-- INSERT INTO users_user (username, email_address, phone_number, address)
+-- SELECT 
+--     'User' || trunc(random() * 10000),  
+--     'user' || trunc(random() * 10000) || '@example.com',  
+--     '987654' || trunc(random() * 10000),  
+--     'Address ' || trunc(random() * 100)  
+-- FROM generate_series(1, 50)
+-- ON CONFLICT (username) DO UPDATE 
+-- SET 
+--     email_address = EXCLUDED.email_address, 
+--     phone_number = EXCLUDED.phone_number,
+--     address = EXCLUDED.address;
+-- select * from users_user
+-- order by user_id DESC
+
+-- -- orders_received:
+
+-- INSERT INTO orders_received (order_id, received_person, received_date_time)
+-- SELECT 
+--     d.order_id,  
+--     'Receiver-' || trunc(random() * 10000),  -- Random receiver name
+--     d.dispatch_date_time 
+--         + (INTERVAL '1 month' * trunc(random() * 11))  -- Spread across 0-11 months
+--         + (INTERVAL '1 day' * trunc(random() * 28))   -- Spread across 0-28 days
+-- FROM orders_dispatch d
+-- LEFT JOIN orders_received r ON d.order_id = r.order_id  -- Avoid inserting duplicates
+-- WHERE r.order_id IS NULL  -- Only insert if order_id is not already in received
+--   AND random() > 0.5  -- 50% chance of receiving
+-- ORDER BY RANDOM();
+-- select * from orders_received
+-- order by received_id DESC
+
+-- -- orders_order:
+
+-- INSERT INTO orders_order (user_id, order_date_time, model_no, qty)
+-- SELECT 
+--     u.id,  -- Correct column name for primary key in users_user
+--     NOW() - (INTERVAL '1 month' * trunc(random() * 12))  -- Spread across last 12 months
+--          - (INTERVAL '1 day' * trunc(random() * 28)),   -- Spread across 0-28 days
+--     'Model-' || trunc(random() * 100),  -- Random model number
+--     trunc(random() * 10) + 1  -- Random quantity between 1 and 10
+-- FROM users_user u
+-- ORDER BY RANDOM()
+-- LIMIT 50;  -- Insert 50 random orders per execution
+-- select * from orders_order
+-- order by order_id DESC
+
+-- -- orders_dispatch
+-- INSERT INTO orders_dispatch (order_id, dispatch_person, dispatch_date_time)
+-- SELECT 
+--     o.order_id,  
+--     'Dispatcher-' || trunc(random() * 1000),  -- Random dispatcher ID
+--     o.order_date_time 
+--         + (INTERVAL '1 month' * trunc(random() * 6))  -- Spread across 0-6 months
+--         + (INTERVAL '1 day' * trunc(random() * 28))   -- Spread across 0-28 days
+-- FROM orders_order o
+-- LEFT JOIN orders_dispatch d ON o.order_id = d.order_id  -- Avoid inserting duplicates
+-- WHERE d.order_id IS NULL  -- Only insert if order is not already dispatched
+--   AND random() > 0.5  -- 50% chance of dispatch
+-- ORDER BY RANDOM();
+-- select * from orders_dispatch
+-- order by dispatch_id DESC
