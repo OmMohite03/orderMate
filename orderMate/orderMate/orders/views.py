@@ -25,8 +25,8 @@ def monthly_summary(request):
     Returns a JSON summary of orders, dispatches, and received records.
     Filters based on year and/or month. If both filters are empty, return all data.
     """
-    selected_month = request.GET.get("month")  # Format: MM (e.g., "05")
-    selected_year = request.GET.get("year")  # Format: YYYY
+    selected_month = request.GET.get("month")  
+    selected_year = request.GET.get("year")  
 
     data = defaultdict(lambda: {"orders": 0, "dispatches": 0, "received": 0})
 
@@ -35,19 +35,16 @@ def monthly_summary(request):
     receiveds = Received.objects.all()
 
     if selected_year and selected_month:
-        # Filter by specific year and month
         orders = orders.filter(order_date_time__year=selected_year, order_date_time__month=selected_month)
         dispatches = dispatches.filter(dispatch_date_time__year=selected_year, dispatch_date_time__month=selected_month)
         receiveds = receiveds.filter(received_date_time__year=selected_year, received_date_time__month=selected_month)
 
     elif selected_year:
-        # Filter by entire year (all 12 months)
         orders = orders.filter(order_date_time__year=selected_year)
         dispatches = dispatches.filter(dispatch_date_time__year=selected_year)
         receiveds = receiveds.filter(received_date_time__year=selected_year)
 
     elif selected_month:
-        # Filter by month across all years
         orders = orders.filter(order_date_time__month=selected_month)
         dispatches = dispatches.filter(dispatch_date_time__month=selected_month)
         receiveds = receiveds.filter(received_date_time__month=selected_month)
