@@ -111,14 +111,18 @@
                 })
                 .catch(error => console.error("Error fetching data:", error));
         }
-        
+
 
         function clearFilters() {
+            // Clear selected filters
             selectedMonths = [];
             selectedYears = [];
             document.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
-            fetchSummary();
+            
+            // Clear the table
+            document.getElementById("summaryTableBody").innerHTML = "";
         }
+        
         </script>
         
     
@@ -150,7 +154,6 @@
             </div>
         
             <button class="btn btn-success me-2" onclick="fetchSummary()">Filter</button>
-            <button class="btn btn-secondary me-2" onclick="sortTable()">Sort Asc/Desc</button>
             <button class="btn btn-warning" onclick="clearFilters()">Reset</button>
         </div>
         
