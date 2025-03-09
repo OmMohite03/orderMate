@@ -70,7 +70,7 @@ DATABASES = {
     'ENGINE': 'django.db.backends.postgresql',
     'NAME': 'ordermate_db',
     'USER': 'postgres',
-    'PASSWORD': '1234',
+    'PASSWORD': '1234',    #error handling is missing
     'HOST': 'localhost',
     'PORT': '5432'
 }

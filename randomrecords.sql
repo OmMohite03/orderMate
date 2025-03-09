@@ -12,7 +12,7 @@ select * from users_user;
 WITH unique_users AS (
     SELECT DISTINCT ON (phone_number) 
         'user' || floor(random() * 100000)::INT AS username,  
-        'user' || floor(random() * 100000)::INT || '@example.com' AS email_address,
+        'user' || floor(random() * 100000)::INT || '@mail.com' AS email_address,
         '987' || LPAD(floor(random() * 100000)::TEXT, 5, '0') AS phone_number,
         'address ' || floor(random() * 10000)::INT AS address
     FROM generate_series(1, 10000) AS g(num)
