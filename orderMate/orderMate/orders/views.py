@@ -6,6 +6,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from collections import defaultdict
 from django.http import JsonResponse
+from django.db.models import Count
+from django.db.models.functions import TruncMonth
+from datetime import datetime
 
 # API ViewSets
 class OrderViewSet(viewsets.ModelViewSet):
@@ -20,9 +23,7 @@ class ReceivedViewSet(viewsets.ModelViewSet):
     queryset = Received.objects.all()
     serializer_class = ReceivedSerializer
 
-from django.db.models import Count
-from django.db.models.functions import TruncMonth
-from datetime import datetime
+
 
 def monthly_summary(request):
     """
@@ -32,46 +33,63 @@ def monthly_summary(request):
       - `month=MM` for data of a specific month across all years.
       - `year=YYYY` for all months of a specific year.
     """
-    selected_months = request.GET.get("months")  # Example: "2025-01,2025-02,2025-03"
-    selected_month = request.GET.get("month")  # Example: "03" (March)
+    selected_months = request.GET.get("months")  # Example: "2025-01,2025-02"
+    selected_month = request.GET.get("month")  # Example: "03"
     selected_year = request.GET.get("year")  # Example: "2024"
 
-    if selected_months:
-        # Convert to datetime list
-        month_list = [datetime.strptime(m.strip(), "%Y-%m") for m in selected_months.split(",")]
+    month_list = []
 
-    elif selected_month:  
-        # Retrieve all years for the given month
-        month_list = Order.objects.dates("order_date_time", "year")  
-        month_list = [datetime(year.year, int(selected_month), 1) for year in month_list]
+    try:
+        if selected_months:
+            month_list = [datetime.strptime(m.strip(), "%Y-%m") for m in selected_months.split(",")]
 
-    elif selected_year:  
-        # Retrieve all months for the given year
-        month_list = [datetime(int(selected_year), m, 1) for m in range(1, 13)]
+        elif selected_month and selected_year:
+            month_list = [datetime.strptime(f"{selected_year}-{selected_month.strip()}", "%Y-%m")]
 
-    else:
-        return JsonResponse({"error": "No valid filter provided"}, status=400)
+        elif selected_month:
+            # Get all years for the given month
+            years = Order.objects.dates("order_date_time", "year")
+            month_list = [datetime(y.year, int(selected_month), 1) for y in years]
+
+        elif selected_year:
+            year = int(selected_year)
+            month_list = [datetime(year, m, 1) for m in range(1, 13)]
+
+        else:
+            return JsonResponse({"error": "No valid filter provided"}, status=400)
+
+    except ValueError as e:
+        return JsonResponse({"error": f"Invalid date format: {str(e)}"}, status=400)
+
+    if not month_list:
+        return JsonResponse({"error": "No valid months found"}, status=400)
 
     # Query data
     orders_summary = (
-        Order.objects.filter(order_date_time__month__in=[m.month for m in month_list], 
-                             order_date_time__year__in=[m.year for m in month_list])
+        Order.objects.filter(
+            order_date_time__month__in=[m.month for m in month_list],
+            order_date_time__year__in=[m.year for m in month_list]
+        )
         .annotate(month=TruncMonth("order_date_time"))
         .values("month")
         .annotate(order_count=Count("order_id"))
     )
 
     dispatches_summary = (
-        Dispatch.objects.filter(dispatch_date_time__month__in=[m.month for m in month_list], 
-                                dispatch_date_time__year__in=[m.year for m in month_list])
+        Dispatch.objects.filter(
+            dispatch_date_time__month__in=[m.month for m in month_list],
+            dispatch_date_time__year__in=[m.year for m in month_list]
+        )
         .annotate(month=TruncMonth("dispatch_date_time"))
         .values("month")
         .annotate(dispatch_count=Count("dispatch_id"))
     )
 
     received_summary = (
-        Received.objects.filter(received_date_time__month__in=[m.month for m in month_list], 
-                                received_date_time__year__in=[m.year for m in month_list])
+        Received.objects.filter(
+            received_date_time__month__in=[m.month for m in month_list],
+            received_date_time__year__in=[m.year for m in month_list]
+        )
         .annotate(month=TruncMonth("received_date_time"))
         .values("month")
         .annotate(received_count=Count("received_id"))
@@ -92,6 +110,8 @@ def monthly_summary(request):
             dispatches_dict.get(m.strftime("%Y-%m"), 0),
             received_dict.get(m.strftime("%Y-%m"), 0),
         ])
+
+    print("final_output: ", final_output)
 
     return JsonResponse(final_output, safe=False)
 

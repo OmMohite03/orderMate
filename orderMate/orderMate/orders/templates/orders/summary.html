@@ -61,16 +61,36 @@
         }
         
         function fetchSummary() {
-            if (selectedMonths.length === 0 || selectedYears.length === 0) {
-                alert("Please select at least one month and one year.");
+            let selectedMonths = Array.from(document.getElementById("monthDropdownMenu").querySelectorAll("input:checked"))
+                .map(cb => cb.value); // Get selected month numbers
+            let selectedYears = Array.from(document.getElementById("yearDropdownMenu").querySelectorAll("input:checked"))
+                .map(cb => cb.value); // Get selected years
+        
+            if (selectedMonths.length === 0 && selectedYears.length === 0) {
+                alert("Please select at least one month or one year.");
                 return;
             }
         
-            let formattedMonths = selectedYears.flatMap(year => 
-                selectedMonths.map(month => `${year}-${month}`)
-            );
+            let queryParams = [];
         
-            let url = `/api/summary/?months=${formattedMonths.join(",")}`;
+            if (selectedMonths.length > 0 && selectedYears.length > 0) {
+                // Generate YYYY-MM format
+                let monthYearPairs = [];
+                selectedYears.forEach(year => {
+                    selectedMonths.forEach(month => {
+                        monthYearPairs.push(`${year}-${month}`);
+                    });
+                });
+                queryParams.push(`months=${monthYearPairs.join(",")}`);
+            } 
+            else if (selectedMonths.length > 0) {
+                queryParams.push(`month=${selectedMonths.join(",")}`);
+            }
+            else if (selectedYears.length > 0) {
+                queryParams.push(`year=${selectedYears.join(",")}`);
+            }
+        
+            let url = `/api/summary/?${queryParams.join("&")}`;
         
             fetch(url)
                 .then(response => response.json())
@@ -93,7 +113,6 @@
         }
         
 
-        
         function clearFilters() {
             selectedMonths = [];
             selectedYears = [];
