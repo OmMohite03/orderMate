@@ -8,51 +8,69 @@
     
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            populateYearDropdown();
             populateMonthDropdown();
+            populateYearDropdown();
         });
-
-        function populateYearDropdown() {
-            let yearSelect = document.getElementById("yearSelect");
-            let currentYear = new Date().getFullYear();
-            let earliestYear = 2020;  
-
-            yearSelect.innerHTML = `<option value="">Select Year</option>`;  
-            for (let year = earliestYear; year <= currentYear; year++) {
-                let option = document.createElement("option");
-                option.value = year;
-                option.textContent = year;
-                yearSelect.appendChild(option);
-            }
-        }
-
+        
+        // Store selected months/years
+        let selectedMonths = [];
+        let selectedYears = [];
+        
         function populateMonthDropdown() {
-            let monthSelect = document.getElementById("monthSelect");
             const months = [
                 "January", "February", "March", "April", "May", "June",
                 "July", "August", "September", "October", "November", "December"
             ];
-
-            monthSelect.innerHTML = `<option value="">Select Month</option>`;  
+            let monthMenu = document.getElementById("monthDropdownMenu");
+            monthMenu.innerHTML = "";
+            
             months.forEach((month, index) => {
-                let option = document.createElement("option");
-                option.value = (index + 1).toString().padStart(2, '0');
-                option.textContent = month;
-                monthSelect.appendChild(option);
+                let id = `month-${index + 1}`;
+                monthMenu.innerHTML += `
+                    <li>
+                        <input type="checkbox" id="${id}" value="${(index + 1).toString().padStart(2, '0')}" onclick="updateSelection('month', this)">
+                        <label for="${id}">${month}</label>
+                    </li>`;
             });
         }
-
-        function fetchSummary() {
-            let selectedMonth = document.getElementById("monthSelect").value;
-            let selectedYear = document.getElementById("yearSelect").value;
         
-            if (!selectedYear || !selectedMonth) {
-                console.error("Year and month must be selected");
+        function populateYearDropdown() {
+            let yearMenu = document.getElementById("yearDropdownMenu");
+            let currentYear = new Date().getFullYear();
+            let earliestYear = 2020;
+            
+            yearMenu.innerHTML = "";
+            for (let year = earliestYear; year <= currentYear; year++) {
+                let id = `year-${year}`;
+                yearMenu.innerHTML += `
+                    <li>
+                        <input type="checkbox" id="${id}" value="${year}" onclick="updateSelection('year', this)">
+                        <label for="${id}">${year}</label>
+                    </li>`;
+            }
+        }
+        
+        function updateSelection(type, checkbox) {
+            let list = type === 'month' ? selectedMonths : selectedYears;
+            
+            if (checkbox.checked) {
+                list.push(checkbox.value);
+            } else {
+                list.splice(list.indexOf(checkbox.value), 1);
+            }
+        }
+        
+        function fetchSummary() {
+            if (selectedMonths.length === 0 || selectedYears.length === 0) {
+                alert("Please select at least one month and one year.");
                 return;
             }
         
-            let formattedMonth = `${selectedYear}-${selectedMonth}`; // Convert to YYYY-MM format
-            let url = `/api/summary/?months=${formattedMonth}`; // Correct query format
+            let formattedMonths = selectedYears.flatMap(year => 
+                selectedMonths.map(month => `${year}-${month}`)
+            );
+        
+            let url = `/api/summary/?months=${formattedMonths.join(",")}`;
         
             fetch(url)
                 .then(response => response.json())
@@ -75,24 +93,16 @@
         }
         
 
-        function sortTable() {
-            let table = document.getElementById("summaryTable");
-            let rows = Array.from(document.querySelectorAll("#summaryTableBody tr"));
-            let sortedAsc = table.getAttribute("data-sorted") === "asc";
-            rows.sort((rowA, rowB) => rowA.cells[0].innerText.localeCompare(rowB.cells[0].innerText) * (sortedAsc ? -1 : 1));
-            table.setAttribute("data-sorted", sortedAsc ? "desc" : "asc");
-            let tableBody = document.getElementById("summaryTableBody");
-            tableBody.innerHTML = "";
-            rows.forEach(row => tableBody.appendChild(row));
-        }
-
+        
         function clearFilters() {
-            document.getElementById("yearSelect").value = "";
-            document.getElementById("monthSelect").value = "";
-            fetchSummary(); 
+            selectedMonths = [];
+            selectedYears = [];
+            document.querySelectorAll("input[type='checkbox']").forEach(cb => cb.checked = false);
+            fetchSummary();
         }
-    </script>
-
+        </script>
+        
+    
     
 </head>
 <body class="bg-light">
@@ -100,12 +110,32 @@
         <h2 class="text-center mb-4">Monthly Summary</h2>
         
         <div class="d-flex justify-content-center mb-3">
-            <select id="monthSelect" class="form-select w-auto me-2"></select>
-            <select id="yearSelect" class="form-select w-auto me-2"></select>
-            <button class="btn btn-primary me-2" onclick="fetchSummary()">Filter</button>
+            <!-- Month Dropdown -->
+            <div class="dropdown me-2">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="monthDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Select Month(s)
+                </button>
+                <ul class="dropdown-menu" id="monthDropdownMenu">
+                    <!-- Months will be added dynamically -->
+                </ul>
+            </div>
+        
+            <!-- Year Dropdown -->
+            <div class="dropdown me-2">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="yearDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    Select Year(s)
+                </button>
+                <ul class="dropdown-menu" id="yearDropdownMenu">
+                    <!-- Years will be added dynamically -->
+                </ul>
+            </div>
+        
+            <button class="btn btn-success me-2" onclick="fetchSummary()">Filter</button>
             <button class="btn btn-secondary me-2" onclick="sortTable()">Sort Asc/Desc</button>
             <button class="btn btn-warning" onclick="clearFilters()">Reset</button>
         </div>
+        
+        
         
         <div class="table-responsive">
             <table id="summaryTable" class="table table-bordered table-striped table-hover text-center" data-sorted="asc">

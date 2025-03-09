@@ -27,19 +27,32 @@ from datetime import datetime
 def monthly_summary(request):
     """
     Returns a summarized list of orders, dispatches, and received records.
-    Takes a list of months/years as input and retrieves the count efficiently.
+    Accepts:
+      - `months=YYYY-MM,YYYY-MM,...` for specific month-year values.
+      - `month=MM` for data of a specific month across all years.
+      - `year=YYYY` for all months of a specific year.
     """
+    selected_months = request.GET.get("months")  # Example: "2025-01,2025-02,2025-03"
+    selected_month = request.GET.get("month")  # Example: "03" (March)
+    selected_year = request.GET.get("year")  # Example: "2024"
 
-    # Get months from request (assume comma-separated: "2025-01,2025-02,2025-03")
-    selected_months = request.GET.get("months")
+    if selected_months:
+        # Convert to datetime list
+        month_list = [datetime.strptime(m.strip(), "%Y-%m") for m in selected_months.split(",")]
 
-    if not selected_months:
-        return JsonResponse({"error": "No months provided"}, status=400)
+    elif selected_month:  
+        # Retrieve all years for the given month
+        month_list = Order.objects.dates("order_date_time", "year")  
+        month_list = [datetime(year.year, int(selected_month), 1) for year in month_list]
 
-    # Convert input string to a list of datetime objects
-    month_list = [datetime.strptime(m.strip(), "%Y-%m") for m in selected_months.split(",")]
+    elif selected_year:  
+        # Retrieve all months for the given year
+        month_list = [datetime(int(selected_year), m, 1) for m in range(1, 13)]
 
-    # Query the database efficiently
+    else:
+        return JsonResponse({"error": "No valid filter provided"}, status=400)
+
+    # Query data
     orders_summary = (
         Order.objects.filter(order_date_time__month__in=[m.month for m in month_list], 
                              order_date_time__year__in=[m.year for m in month_list])
@@ -72,7 +85,7 @@ def monthly_summary(request):
     # Generate final structured output
     final_output = []
     for m in month_list:
-        month_str = m.strftime("%B %Y")  
+        month_str = m.strftime("%B %Y")  # "March 2024" format
         final_output.append([
             month_str,
             orders_dict.get(m.strftime("%Y-%m"), 0),
@@ -80,7 +93,6 @@ def monthly_summary(request):
             received_dict.get(m.strftime("%Y-%m"), 0),
         ])
 
-    print("final_output: ", final_output)
     return JsonResponse(final_output, safe=False)
 
 
